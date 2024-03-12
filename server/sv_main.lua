@@ -1,4 +1,5 @@
 local config = require 'configs.server'
+local shared = require 'configs.shared'
 local totalCops = 0
 
 local function distanceCheck(player, target)
@@ -54,6 +55,8 @@ end)
 -- Constantly Update Cop Count --
 AddEventHandler('onResourceStart', function(resource)
     if resource ~= GetCurrentResourceName() then return end
+    if shared.requiredCops == 0 then return end
+
     SetInterval(function()
         local players = GetPlayers()
         local copCount = 0
