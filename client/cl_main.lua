@@ -139,7 +139,7 @@ local function aimAtPedsLoop(newWeapon)
 
                 local isAiming, entity = GetEntityPlayerIsFreeAimingAt(cache.playerId)
                 local entityState = Entity(entity)?.state?.robbed
-                local missionEntity = (GetEntityPopulationType(entity) = 7)
+                local missionEntity = (GetEntityPopulationType(entity) == 7)
                 dist = getDistance(entity)
 
                 if dist <= config.targetDistance and not entityState and not missionEntity and not isRobbing and IsPedHuman(entity) and not IsPedDeadOrDying(entity, true) and not IsPedInAnyVehicle(entity) then
