@@ -25,7 +25,13 @@ local function pedGetUp(entity)
         return
     end
 
-    fightOrFlee(entity)
+    local fightChance = math.random(config.chancePedFights.min, config.chancePedFights.max)
+    local randomChance = math.random(100)
+    if randomChance <= fightChance then
+        attackingPed(entity)
+    else
+        pedFlees(entity)
+    end
 end
 
 -- Handle Robbing Local --

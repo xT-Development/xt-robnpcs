@@ -11,8 +11,8 @@ return {
         max = 25
     },
     chancePedFights = {                                     -- Chance ped beats your ass before or after being robbed
-        min = 80,
-        max = 90
+        min = 5,
+        max = 15
     },
     chancePedIsArmedWhileFighting = {                       -- Chance ped has a melee weapon to fight player
         min = 80,
