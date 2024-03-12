@@ -4,9 +4,10 @@ return {
         'police',
         'ambulance'
     },
+    requiredCops = 0,                                       -- Amount of cops required to rob locals
     robLength = 5,                                          -- Length to rob local (seconds)
     chancePedRunsAway = { min = 5, max = 10 },              -- Chance ped runs away rather than surrendering
-    copsChance = { min = 0, max = 10 },                     -- Chance police are called
+    copsChance = { min = 80, max = 90 },                     -- Chance police are called
 
     dispatch = function(coords)
         local PoliceJobs = { 'police' }
