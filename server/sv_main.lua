@@ -24,6 +24,42 @@ local function hasPoliceJob(src, jobs)
     end
 end
 
+-- Receive Cash --
+local function receiveCashChance(src)
+    local payChance = math.random(config.payOutChance.min, config.payOutChance.max)
+    local randomChance = math.random(100)
+    local callback = false
+
+    if randomChance <= payChance then
+        local pay = math.random(config.payOut.min, config.payOut.max)
+        if config.addCash(src, pay) then
+            callback = true
+        end
+    else
+        lib.notify(src, { title = 'No Cash!', description = 'They didn\'t have any cash!', type = 'error' })
+        callback = true
+    end
+
+    return callback
+end
+
+-- Receive Items --
+local function receiveItemsChance(src)
+    local itemChance = math.random(config.chanceItemsFound.min, config.chanceItemsFound.max)
+    local randomChance = math.random(100)
+    local callback = false
+
+    if randomChance <= itemChance then
+        local randomItem = math.random(#config.lootableItems)
+        local randomAmount = math.random(config.lootableItems[randomItem].min, config.lootableItems[randomItem].max)
+        if config.addItem(src, config.lootableItems[randomItem].item, randomAmount) then
+            callback = true
+        end
+    end
+
+    return callback
+end
+
 -- Get Paid (or not) & Set State --
 lib.callback.register('xt-robnpcs:server:robNPC', function(source, netID)
     local src = source
@@ -38,13 +74,8 @@ lib.callback.register('xt-robnpcs:server:robNPC', function(source, netID)
         state:set('robbed', src, true)
         local payChance = math.random(config.payOutChance.min, config.payOutChance.max)
         local randomChance = math.random(100)
-        if randomChance <= payChance then
-            local pay = math.random(config.payOut.min, config.payOut.max)
-            if config.addCash(src, pay) then
-                callback = true
-            end
-        else
-            lib.notify(src, { title = 'No Cash!', description = 'They didn\'t have any cash!', type = 'error' })
+        if receiveCashChance(src) then
+            receiveItemsChance(src)
             callback = true
         end
     end
