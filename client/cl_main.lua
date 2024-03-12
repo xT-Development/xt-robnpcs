@@ -1,30 +1,16 @@
 local config = require 'configs.client'
-local isRobbing = false
+local shared = require 'configs.shared'
 local targetLocal = nil
 local totalCops = 0
 
--- Distance Between Player & Ped --
-local function getDistance(entity)
-    local pCoords = GetEntityCoords(cache.ped, true)
-    local tCoords = GetEntityCoords(entity, true)
-    local dist = #(tCoords - pCoords)
-
-    return dist
-end
-
--- Chance Police are Called --
-local function notifyPolice(coords)
-    local copsChance = math.random(config.copsChance.min, config.copsChance.max)
-    local randomChance = math.random(100)
-    if randomChance <= copsChance then
-        config.dispatch(coords)
-    end
-end
+isRobbing = false
 
 -- Ped Gets Up & Runs Away --
 local function pedGetUp(entity)
     targetLocal = nil
     isRobbing = false
+
+    removeInteraction(entity)
 
     if IsPedDeadOrDying(entity, true) then
         return
@@ -35,11 +21,12 @@ local function pedGetUp(entity)
     TaskPlayAnim(entity, 'random@shop_robbery', 'kneel_getup_p', 2.0, 2.0, 2500, 9, 0, false, false, false)
     Wait(2500)
 
+    SetBlockingOfNonTemporaryEvents(entity, false)
+
     if not cache.ped then
         return
     end
 
-    SetBlockingOfNonTemporaryEvents(entity, false)
     TaskReactAndFleePed(entity, cache.ped)
 end
 
@@ -62,10 +49,47 @@ local function robLocal(entity)
     end
 end
 
+-- Adds Interaction to Ped --
+local function addInteraction(entity)
+    if config.useInteract then
+        local netId = NetworkGetNetworkIdFromEntity(entity)
+
+        exports.interact:AddEntityInteraction({
+            netId = netId,
+            id = 'robLocal',
+            distance = 4.0,
+            interactDst = 2.0,
+            ignoreLos = false,
+            options = {
+                {
+                    label = 'Rob Citizen',
+                    action = function(_, coords, args)
+                        robLocal(entity)
+                    end,
+                },
+            }
+        })
+    else
+        exports['qb-target']:AddTargetEntity(entity, {
+            options = {
+                {
+                    type = "client",
+                    icon = 'fas fa-gun',
+                    label = 'Rob Citizen',
+                    action = function(entity)
+                        robLocal(entity)
+                    end,
+                }
+            },
+            distance = 2.0,
+        })
+    end
+end
+
 -- Local Plays Anim / Add Target --
-local function handlePedInteraction(entity)
+local function handlePedInteraction(pedEntity)
     isRobbing = true
-    targetLocal = entity
+    targetLocal = pedEntity
 
     Wait(2000) -- Just a little "buffer" so they dont react instantly
 
@@ -73,8 +97,8 @@ local function handlePedInteraction(entity)
     local runChance = math.random(config.chancePedRunsAway.min, config.chancePedRunsAway.max)
     local randomChance = math.random(100)
     if randomChance <= runChance then
-        TaskReactAndFleePed(entity, cache.ped)
-        Entity(entity).state:set('robbed', true, false)
+        TaskReactAndFleePed(targetLocal, cache.ped)
+        Entity(targetLocal).state:set('robbed', true, false)
         lib.notify({ title = 'They ran away!', type = 'error'})
         Wait(2000) -- Another little "buffer" so players cant just snap to the next ped instantly if they run away
         targetLocal = nil
@@ -82,39 +106,24 @@ local function handlePedInteraction(entity)
         return
     end
 
-    local coords = GetEntityCoords(entity)
+    local coords = GetEntityCoords(targetLocal)
     notifyPolice(coords)
 
-    SetBlockingOfNonTemporaryEvents(entity, true)
-    SetPedKeepTask(entity, true)
-    TaskStandStill(entity, 2000)
-    TaskHandsUp(entity, 2000, -1)
-    FreezeEntityPosition(entity, true)
+    SetBlockingOfNonTemporaryEvents(targetLocal, true)
+    TaskStandStill(targetLocal, 2000)
+    TaskHandsUp(targetLocal, 2000)
+    SetPedKeepTask(targetLocal, true)
+    FreezeEntityPosition(targetLocal, true)
     Wait(2000)
 
-    exports.ox_target:addLocalEntity(entity, {
-        {
-            label = 'Rob Citizen',
-            icon = 'fas fa-gun',
-            onSelect = function()
-                robLocal(entity)
-            end
-        }
-    })
-
-    lib.requestAnimDict('random@shop_robbery')
-    while isRobbing do
-        if not IsEntityPlayingAnim(entity, 'random@shop_robbery', 'kneel_loop_p', 3) then
-            TaskPlayAnim(entity, 'random@shop_robbery', 'kneel_loop_p', 50.0, 8.0, -1, 1, 1.0, false, false, false)
-        end
-        Wait(200)
-    end
+    forceSurrenderAnimation(targetLocal)
+    addInteraction(targetLocal)
 end
 
 local function aimAtPedsLoop(newWeapon)
     local sleep = 10
     while cache.weapon ~= nil do
-        if totalCops >= config.requiredCops then
+        if totalCops >= shared.requiredCops then
             local dist
 
             -- Ped gets up and runs away if you're too far away
@@ -130,9 +139,10 @@ local function aimAtPedsLoop(newWeapon)
 
                 local isAiming, entity = GetEntityPlayerIsFreeAimingAt(cache.playerId)
                 local entityState = Entity(entity)?.state?.robbed
+                local missionEntity = (GetEntityPopulationType(entity) = 7)
                 dist = getDistance(entity)
 
-                if dist <= config.targetDistance and not entityState and not isRobbing and IsPedHuman(entity) and not IsPedDeadOrDying(entity, true) then
+                if dist <= config.targetDistance and not entityState and not missionEntity and not isRobbing and IsPedHuman(entity) and not IsPedDeadOrDying(entity, true) and not IsPedInAnyVehicle(entity) then
                     handlePedInteraction(entity)
                 end
             else
@@ -152,19 +162,17 @@ lib.onCache('weapon', function(newWeapon)
     aimAtPedsLoop(newWeapon)
 end)
 
+RegisterNetEvent('xt-robnpcs:client:setCopCount', function(copCount)
+    totalCops = copCount
+end)
+
 AddEventHandler('xt-robnpcs:client:onUnload', function()
-    if targetLocal ~= nil then
-        pedGetUp(targetLocal)
-    end
+    if not targetLocal then return end
+    pedGetUp(targetLocal)
 end)
 
 AddEventHandler('onResourceStop', function(resource)
     if resource ~= GetCurrentResourceName() then return end
-    if targetLocal ~= nil then
-        pedGetUp(targetLocal)
-    end
-end)
-
-RegisterNetEvent('xt-robnpcs:client:setCopCount', function(copCount)
-    totalCops = copCount
+    if not targetLocal then return end
+    pedGetUp(targetLocal)
 end)
