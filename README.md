@@ -24,6 +24,7 @@
     - Ped does animation to get up and flee
 - Easy configurations
     - Open function for adding money
+    - Open function for adding items (use any inventory)
     - Open function for any dispatch
 
 # [Preview](https://www.youtube.com/watch?v=s-Ihw-aHBbo)
