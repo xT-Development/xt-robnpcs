@@ -8,3 +8,8 @@ chunk()
 function getPlayer(id)
     return Ox.GetPlayer(id)
 end
+
+function getPlayerJob(src)
+    local player = getPlayer(src)
+    return player.getGroup()
+end
