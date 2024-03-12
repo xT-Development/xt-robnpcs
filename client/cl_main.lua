@@ -1,8 +1,8 @@
 local config = require 'configs.client'
 local shared = require 'configs.shared'
-local targetLocal = nil
 local totalCops = 0
 
+targetLocal = nil
 isRobbing = false
 
 -- Ped Gets Up & Runs Away --
@@ -21,13 +21,11 @@ local function pedGetUp(entity)
     TaskPlayAnim(entity, 'random@shop_robbery', 'kneel_getup_p', 2.0, 2.0, 2500, 9, 0, false, false, false)
     Wait(2500)
 
-    SetBlockingOfNonTemporaryEvents(entity, false)
-
     if not cache.ped then
         return
     end
 
-    TaskReactAndFleePed(entity, cache.ped)
+    fightOrFlee(entity)
 end
 
 -- Handle Robbing Local --
@@ -93,24 +91,19 @@ local function handlePedInteraction(pedEntity)
 
     Wait(2000) -- Just a little "buffer" so they dont react instantly
 
-    -- Chance ped does not surrender
-    local runChance = math.random(config.chancePedRunsAway.min, config.chancePedRunsAway.max)
-    local randomChance = math.random(100)
-    if randomChance <= runChance then
-        TaskReactAndFleePed(targetLocal, cache.ped)
-        Entity(targetLocal).state:set('robbed', true, false)
-        lib.notify({ title = 'They ran away!', type = 'error'})
-        Wait(2000) -- Another little "buffer" so players cant just snap to the next ped instantly if they run away
-        targetLocal = nil
-        isRobbing = false
-        return
-    end
-
     local coords = GetEntityCoords(targetLocal)
     notifyPolice(coords)
 
-    SetBlockingOfNonTemporaryEvents(targetLocal, true)
     TaskStandStill(targetLocal, 2000)
+
+    -- Chance ped does not surrender
+    if fightOrFlee(targetLocal) then
+        isRobbing = false
+        targetLocal = nil
+        Entity(pedEntity).state:set('robbed', true, false)
+        return
+    end
+
     TaskHandsUp(targetLocal, 2000)
     SetPedKeepTask(targetLocal, true)
     FreezeEntityPosition(targetLocal, true)

@@ -6,8 +6,26 @@ return {
         'ambulance'
     },
     robLength = 5,                                          -- Length to rob local (seconds)
-    chancePedRunsAway = { min = 5, max = 25 },              -- Chance ped runs away rather than surrendering
-    copsChance = { min = 80, max = 90 },                    -- Chance police are called
+    chancePedFlees = {                                      -- Chance ped runs away rather than surrendering
+        min = 5,
+        max = 25
+    },
+    chancePedFights = {                                     -- Chance ped beats your ass before or after being robbed
+        min = 80,
+        max = 90
+    },
+    chancePedIsArmedWhileFighting = {                       -- Chance ped has a melee weapon to fight player
+        min = 80,
+        max = 90
+    },
+    pedWeapons = {                                          -- Weapons ped might have
+        'WEAPON_KINFE',
+        'WEAPON_BAT'
+    },
+    copsChance = {                                          -- Chance police are called
+        min = 80,
+        max = 90
+    },
 
     dispatch = function(coords)
         local PoliceJobs = { 'police' }

@@ -39,5 +39,51 @@ function removeInteraction(entity)
     else
         exports['qb-target']:RemoveTargetEntity(entity, 'Rob Citizen')
     end
+end
 
+-- Ped Fights or Flees --
+function fightOrFlee(entity)
+    local fightChance = math.random(config.chancePedFights.min, config.chancePedFights.max)
+    local fleeChance = math.random(config.chancePedFlees.min, config.chancePedFlees.max)
+    local randomChance = math.random(100)
+
+    SetBlockingOfNonTemporaryEvents(entity, true)
+
+    if randomChance <= fightChance then
+        if IsPedFleeing(entity) then
+            ClearPedTasksImmediately(entity)
+        end
+
+        SetPedFleeAttributes(entity, 0, 0)
+        SetPedCombatAttributes(entity, 46, 1)       -- BF_CanFightArmedPedsWhenNotArmed
+        SetPedCombatAttributes(entity, 17, 0)       -- BF_AlwaysFlee
+        SetPedCombatAttributes(entity, 5, 1)        -- BF_AlwaysFight
+        SetPedCombatAttributes(entity, 58, 1)       -- BF_DisableFleeFromCombat
+        SetPedCombatRange(entity, 3)
+        SetPedRelationshipGroupHash(entity, joaat('HATES_PLAYER'))
+        TaskCombatHatedTargetsAroundPed(entity, 50, 0)
+
+        local weaponChance = math.random(config.chancePedIsArmedWhileFighting.min, config.chancePedIsArmedWhileFighting.max)
+        local randomChance2 = math.random(100)
+        if randomChance2 <= weaponChance then
+            local randomWeapon = math.random(#config.pedWeapons)
+            GiveWeaponToPed(entity, config.pedWeapons[randomWeapon], false, false)
+        end
+
+        TaskCombatHatedTargetsAroundPed(entity, 50, 0)
+        lib.notify({ title = 'Fight Back!', description = 'They didn\'t like that!', type = 'error' })
+        return true
+    end
+
+    if randomChance <= fleeChance then
+        SetBlockingOfNonTemporaryEvents(entity, false)
+        TaskReactAndFleePed(entity, cache.ped)
+        lib.notify({ title = 'They ran away!', type = 'error'})
+        Wait(2000) -- Another little "buffer" so players cant just snap to the next ped instantly if they run away
+        targetLocal = nil
+        isRobbing = false
+        return true
+    end
+
+    return false
 end
