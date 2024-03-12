@@ -26,6 +26,8 @@
     - Open function for adding money
     - Open function for any dispatch
 
+# [Preview](https://www.youtube.com/watch?v=s-Ihw-aHBbo)
+
 # Dependencies:
 - [ox_lib](https://github.com/overextended/ox_lib/releases)
 - Supported Interaction Resources:
