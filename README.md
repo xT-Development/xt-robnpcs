@@ -10,6 +10,8 @@
 - Sets 'robbed' statebag on peds once they are robbed / run away, preventing them from being robbed again
 - Required cop count, or zero
 - Min / max payouts
+- Chance to receive items from peds pocket
+- Chance the ped decides to flee or beat your ass before or after robbing them
 - Blacklisted jobs
     - Set jobs can not rob locals
 - Random Chances
@@ -23,11 +25,6 @@
 - Easy configurations
     - Open function for adding money
     - Open function for any dispatch
-
-
-# WIP / Planned:
-- [ ] Chance to receive items (phones, rolex, jewelry, etc)
-- [ ] Chance ped beats your ass before or after being robbed, rather than surrendering
 
 # Dependencies:
 - [ox_lib](https://github.com/overextended/ox_lib/releases)
