@@ -133,10 +133,19 @@ local function aimAtPedsLoop(newWeapon)
                 end
             end
 
-            if IsPlayerFreeAiming(cache.playerId) then
-                sleep = 10
+            local entity
 
-                local isAiming, entity = GetEntityPlayerIsFreeAimingAt(cache.playerId)
+            if IsPlayerTargettingAnything(cache.playerId) then
+                _, entity = GetPlayerTargetEntity(cache.playerId)
+                sleep = 10
+            elseif IsPlayerFreeAiming(cache.playerId) then
+                _, entity = GetEntityPlayerIsFreeAimingAt(cache.playerId)
+                sleep = 10
+            else
+                sleep = 500
+            end
+
+            if entity ~= nil then
                 local entityState = Entity(entity)?.state?.robbed
                 local missionEntity = (GetEntityPopulationType(entity) == 7)
                 dist = getDistance(entity)
@@ -144,8 +153,6 @@ local function aimAtPedsLoop(newWeapon)
                 if dist <= config.targetDistance and not entityState and not missionEntity and not isRobbing and IsPedHuman(entity) and not IsPedDeadOrDying(entity, true) and not IsPedInAnyVehicle(entity) then
                     handlePedInteraction(entity)
                 end
-            else
-                sleep = 500
             end
         else
             sleep = 500
@@ -156,7 +163,7 @@ end
 
 -- Handlers --
 lib.onCache('weapon', function(newWeapon)
-    if not newWeapon or isBlacklistedJob(config.blacklistedJobs) then return end
+    if not newWeapon or not isAllowedWeapon(newWeapon) or isBlacklistedJob(config.blacklistedJobs) then return end
 
     aimAtPedsLoop(newWeapon)
 end)

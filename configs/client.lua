@@ -26,6 +26,10 @@ return {
         min = 80,
         max = 90
     },
+    allowedWeapons = {                                      -- Weapons allowed to rob peds
+        'WEAPON_KNIFE',
+        'WEAPON_PISTOL'
+    },
 
     dispatch = function(coords)
         local PoliceJobs = { 'police' }

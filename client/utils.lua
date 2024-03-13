@@ -71,7 +71,6 @@ end
 function pedFlees(entity)
     SetBlockingOfNonTemporaryEvents(entity, false)
     TaskReactAndFleePed(entity, cache.ped)
-    lib.notify({ title = 'They ran away!', type = 'error'})
     Wait(2000) -- Another little "buffer" so players cant just snap to the next ped instantly if they run away
     targetLocal = nil
     isRobbing = false
@@ -92,8 +91,22 @@ function fightOrFlee(entity)
 
     if randomChance <= fleeChance then
         pedFlees(entity)
+        lib.notify({ title = 'They ran away!', type = 'error'})
         return true
     end
 
     return false
+end
+
+function isAllowedWeapon(weapon)
+    local callback = false
+
+    for x = 1, #config.allowedWeapons do
+        if weapon == joaat(config.allowedWeapons[x]) then
+            callback = true
+            break
+        end
+    end
+
+    return callback
 end
