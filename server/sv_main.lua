@@ -1,6 +1,8 @@
 local config = require 'configs.server'
 local shared = require 'configs.shared'
-local totalCops = 0
+local globalState = GlobalState
+
+globalState.copCount = globalState?.copCount or 0
 
 local function distanceCheck(player, target)
     local pCoords = GetEntityCoords(GetPlayerPed(player))
@@ -90,17 +92,16 @@ AddEventHandler('onResourceStart', function(resource)
 
     SetInterval(function()
         local players = GetPlayers()
-        local copCount = 0
+        local count = 0
 
         for _, src in pairs(players) do
             if hasPoliceJob(tonumber(src), config.policeJobs) then
-                copCount += 1
+                count += 1
             end
         end
 
-        if totalCops ~= copCount then
-            totalCops = copCount
-            TriggerClientEvent('xt-robnpcs:client:setCopCount', -1, totalCops)
+        if globalState.copCount ~= count then
+            globalState.copCount = count
         end
     end, 60000)
 end)

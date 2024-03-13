@@ -1,6 +1,6 @@
 local config = require 'configs.client'
 local shared = require 'configs.shared'
-local totalCops = 0
+local globalState = GlobalState
 
 targetLocal = nil
 isRobbing = false
@@ -122,7 +122,7 @@ end
 local function aimAtPedsLoop(newWeapon)
     local sleep = 10
     while cache.weapon ~= nil do
-        if totalCops >= shared.requiredCops then
+        if globalState?.copCount >= shared.requiredCops then
             local dist
 
             -- Ped gets up and runs away if you're too far away
@@ -166,10 +166,6 @@ lib.onCache('weapon', function(newWeapon)
     if not newWeapon or not isAllowedWeapon(newWeapon) or isBlacklistedJob(config.blacklistedJobs) then return end
 
     aimAtPedsLoop(newWeapon)
-end)
-
-RegisterNetEvent('xt-robnpcs:client:setCopCount', function(copCount)
-    totalCops = copCount
 end)
 
 AddEventHandler('xt-robnpcs:client:onUnload', function()
