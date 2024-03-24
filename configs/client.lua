@@ -19,7 +19,7 @@ return {
         max = 90
     },
     pedWeapons = {                                          -- Weapons ped might have
-        'WEAPON_KINFE',
+        'WEAPON_KNIFE',
         'WEAPON_BAT'
     },
     copsChance = {                                          -- Chance police are called
