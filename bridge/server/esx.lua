@@ -7,6 +7,6 @@ function getPlayer(src)
 end
 
 function getPlayerJob(src)
-    local Player = getPlayer(src)
-    return Player.job.name
+    local player = getPlayer(src)
+    return player and player.job.name or nil
 end

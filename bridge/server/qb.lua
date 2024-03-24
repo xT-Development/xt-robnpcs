@@ -8,5 +8,5 @@ end
 
 function getPlayerJob(src)
     local player = getPlayer(src)
-    return player.PlayerData.job.name
+    return player and player.PlayerData.job.name or nil
 end

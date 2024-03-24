@@ -11,5 +11,5 @@ end
 
 function getPlayerJob(src)
     local player = getPlayer(src)
-    return player.getGroup()
+    return player and player.getGroup() or nil
 end
