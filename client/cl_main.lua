@@ -122,7 +122,7 @@ end
 local function aimAtPedsLoop(newWeapon)
     local sleep = 10
     while cache.weapon ~= nil do
-        if globalState?.copCount >= shared.requiredCops then
+        if globalState?.copCount >= shared.requiredCops and not cache.vehicle then
             local dist
 
             -- Ped gets up and runs away if you're too far away
