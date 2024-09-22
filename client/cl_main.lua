@@ -1,6 +1,8 @@
 local config = require 'configs.client'
 local shared = require 'configs.shared'
 local globalState = GlobalState
+local target = GetResourceState('qb-target') == 'started' and 'qb' or 'ox'
+local targetExport = (target == 'qb') and exports['qb-target'] or exports.ox_target
 
 targetLocal = nil
 isRobbing = false
@@ -14,6 +16,12 @@ local function pedGetUp(entity)
 
     if IsPedDeadOrDying(entity, true) then
         return
+    end
+
+    if target == 'qb' then
+        targetExport:RemoveTargetEntity(entity, 'Rob Citizen')
+    else
+        targetExport:removeLocalEntity(entity, 'rob_local')
     end
 
     FreezeEntityPosition(entity, false)
@@ -74,19 +82,34 @@ local function addInteraction(entity)
             }
         })
     else
-        exports['qb-target']:AddTargetEntity(entity, {
-            options = {
+
+        if target == 'qb' then
+            targetExport:AddTargetEntity(entity, {
+                options = {
+                    {
+                        type = "client",
+                        icon = 'fas fa-gun',
+                        label = 'Rob Citizen',
+                        action = function(entity)
+                            robLocal(entity)
+                        end,
+                    }
+                },
+                distance = 2.0,
+            })
+        else
+            targetExport:addLocalEntity(entity, {
                 {
-                    type = "client",
-                    icon = 'fas fa-gun',
                     label = 'Rob Citizen',
-                    action = function(entity)
+                    name = 'rob_local',
+                    icon = 'fas fa-gun',
+                    distance = 2.0,
+                    onSelect = function(data)
                         robLocal(entity)
                     end,
                 }
-            },
-            distance = 2.0,
-        })
+            })
+        end
     end
 end
 
