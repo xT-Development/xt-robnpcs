@@ -1,4 +1,6 @@
 local config = require 'configs.client'
+local target = GetResourceState('qb-target') == 'started' and 'qb' or 'ox'
+local targetExport = (target == 'qb') and exports['qb-target'] or exports.ox_target
 
 -- Forces Ped Into Surrended Animation --
 function forceSurrenderAnimation(entity)
@@ -37,7 +39,11 @@ function removeInteraction(entity)
         local netId = NetworkGetNetworkIdFromEntity(entity)
         exports.interact:RemoveEntityInteraction(netId, 'robLocal')
     else
-        exports['qb-target']:RemoveTargetEntity(entity, 'Rob Citizen')
+        if target == 'qb' then
+            targetExport:RemoveTargetEntity(entity, 'Rob Citizen')
+        else
+            targetExport:removeLocalEntity(entity, 'rob_local')
+        end
     end
 end
 
