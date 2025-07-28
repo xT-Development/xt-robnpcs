@@ -142,10 +142,53 @@ local function handlePedInteraction(pedEntity)
     addInteraction(targetLocal)
 end
 
+local function isAiming()
+    return (IsPlayerTargettingAnything(cache.playerId) or IsPlayerFreeAiming(cache.playerId) or IsControlPressed(0, 25)) and true or false
+end
+
+-- raycast from gun muzzle for hit entities
+-- rather than relying on dogshit aiming natives that rarely seem to work
+local function raycastFromGun()
+    local gun = GetCurrentPedWeaponEntityIndex(cache.ped)
+    if not gun or gun == 0 then return end
+
+    -- Get muzzle position
+    local muzzleIndex = GetEntityBoneIndexByName(gun, "gun_muzzle")
+    local gunCoords = GetWorldPositionOfEntityBone(gun, muzzleIndex)
+
+    -- Get camera direction
+    local camRot = GetGameplayCamRot(0)
+    local pitch = math.rad(camRot.x)
+    local yaw = math.rad(camRot.z)
+
+    -- Convert rotation to a directional vector
+    local forwardVector = {
+        x = -math.sin(yaw) * math.cos(pitch),
+        y = math.cos(yaw) * math.cos(pitch),
+        z = math.sin(pitch)
+    }
+
+    -- Raycast endpoint
+    local distance = config.targetDistance
+    local finalCoords = {
+        x = gunCoords.x + forwardVector.x * distance,
+        y = gunCoords.y + forwardVector.y * distance,
+        z = gunCoords.z + forwardVector.z * distance
+    }
+
+    local hit, entity = lib.raycast.fromCoords(gunCoords, finalCoords, 4, 4)
+
+    return hit, entity
+end
+
 local function aimAtPedsLoop(newWeapon)
+    while cache.weapon ~= newWeapon do
+        Wait(1)
+    end
+
     local sleep = 10
     while cache.weapon == newWeapon do
-        if globalState?.copCount >= shared.requiredCops and not cache.vehicle then
+        if globalState?.copCount >= shared.requiredCops and not cache.vehicle and not isRobbing then
             local dist
 
             -- Ped gets up and runs away if you're too far away
@@ -156,19 +199,15 @@ local function aimAtPedsLoop(newWeapon)
                 end
             end
 
-            local entity
-
-            if IsPlayerTargettingAnything(cache.playerId) then
-                _, entity = GetPlayerTargetEntity(cache.playerId)
-                sleep = 10
-            elseif IsPlayerFreeAiming(cache.playerId) then
-                _, entity = GetEntityPlayerIsFreeAimingAt(cache.playerId)
-                sleep = 10
-            else
-                sleep = 500
+            local aiming = isAiming()
+            local hit, entity
+            if aiming then
+                hit, entity = raycastFromGun()
             end
 
-            if entity ~= nil then
+            sleep = (aiming and not isRobbing) and 10 or 500
+
+            if aiming and hit and entity then
                 local entityState = Entity(entity)?.state?.robbed
                 local missionEntity = (GetEntityPopulationType(entity) == 7)
                 dist = getDistance(entity)
