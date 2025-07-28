@@ -144,7 +144,7 @@ end
 
 local function aimAtPedsLoop(newWeapon)
     local sleep = 10
-    while cache.weapon ~= nil do
+    while cache.weapon == newWeapon do
         if globalState?.copCount >= shared.requiredCops and not cache.vehicle then
             local dist
 
@@ -186,7 +186,7 @@ end
 
 -- Handlers --
 lib.onCache('weapon', function(newWeapon)
-    if not newWeapon or not isAllowedWeapon(newWeapon) or isBlacklistedJob(config.blacklistedJobs) then return end
+    if not newWeapon or (newWeapon == `WEAPON_UNARMED`) or not isAllowedWeapon(newWeapon) or isBlacklistedJob(config.blacklistedJobs) or cache.vehicle then return end
 
     aimAtPedsLoop(newWeapon)
 end)
